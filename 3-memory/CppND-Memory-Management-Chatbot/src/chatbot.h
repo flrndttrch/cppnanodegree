@@ -3,6 +3,7 @@
 
 #include <wx/bitmap.h>
 #include <string>
+#include <iostream>
 
 class GraphNode; // forward declaration
 class ChatLogic; // forward declaration
@@ -29,7 +30,33 @@ public:
 
     //// STUDENT CODE
     ////
+    ChatBot(const ChatBot &source);
+    ChatBot &operator=(const ChatBot &source) {
+    	std::cout << "ChatBot Copy Assignment Operator" << std::endl;
+        delete _image;
+        _image = new wxBitmap();
+        *_image = *source._image;  
 
+        ChatBot::SetCurrentNode(source._currentNode);
+        ChatBot::SetRootNode(source._rootNode);
+        ChatBot::SetChatLogicHandle(source._chatLogic); 
+    }    
+    ChatBot(ChatBot &&source);
+    ChatBot &operator=(ChatBot &&source) {
+    std::cout << "ChatBot Move Assignment Operator" << std::endl;
+      delete _image;
+      _image = new wxBitmap();
+      *_image = *source.GetImageHandle(); 
+
+      ChatBot::SetCurrentNode(source._currentNode);
+      ChatBot::SetRootNode(source._rootNode);
+      ChatBot::SetChatLogicHandle(source._chatLogic);
+
+	  source._image = nullptr;
+      source.SetCurrentNode(nullptr);
+      source.SetRootNode(nullptr);
+      source.SetChatLogicHandle(nullptr);
+	}
     ////
     //// EOF STUDENT CODE
 
@@ -37,6 +64,7 @@ public:
     void SetCurrentNode(GraphNode *node);
     void SetRootNode(GraphNode *rootNode) { _rootNode = rootNode; }
     void SetChatLogicHandle(ChatLogic *chatLogic) { _chatLogic = chatLogic; }
+    ChatLogic *GetChatLogicHandle() { return _chatLogic; }
     wxBitmap *GetImageHandle() { return _image; }
 
     // communication

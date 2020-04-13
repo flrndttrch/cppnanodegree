@@ -44,7 +44,30 @@ ChatBot::~ChatBot()
 
 //// STUDENT CODE
 ////
+ChatBot::ChatBot(const ChatBot &source) {
+  	std::cout << "ChatBot Copy Constructor" << std::endl;
+  	_image = new wxBitmap();
+  	*_image = *source._image;
+  
+ 	ChatBot::SetCurrentNode(source._currentNode);
+    ChatBot::SetRootNode(source._rootNode);
+    ChatBot::SetChatLogicHandle(source._chatLogic);
+}
 
+ChatBot::ChatBot(ChatBot &&source) {
+  	std::cout << "ChatBot Move Constructor" << std::endl;
+  	_image = new wxBitmap();
+  	*_image = *source.GetImageHandle();
+  
+ 	ChatBot::SetCurrentNode(source._currentNode);
+    ChatBot::SetRootNode(source._rootNode);
+    ChatBot::SetChatLogicHandle(source._chatLogic);
+  
+  	source._image = NULL;
+  	source.SetCurrentNode(nullptr);
+  	source.SetRootNode(nullptr);
+  	source.SetChatLogicHandle(nullptr);
+}
 ////
 //// EOF STUDENT CODE
 
@@ -79,6 +102,7 @@ void ChatBot::ReceiveMessageFromUser(std::string message)
     }
 
     // tell current node to move chatbot to new node
+  	std::cout << "MoveChatbotToNewNode (Chatbot.cpp)\n";
     _currentNode->MoveChatbotToNewNode(newNode);
 }
 
