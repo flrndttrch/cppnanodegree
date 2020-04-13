@@ -5,6 +5,8 @@
 #include <string>
 #include <iostream>
 
+#include "chatlogic.h"
+
 class GraphNode; // forward declaration
 class ChatLogic; // forward declaration
 
@@ -30,33 +32,34 @@ public:
 
     //// STUDENT CODE
     ////
-    ChatBot(const ChatBot &source);
-    ChatBot &operator=(const ChatBot &source) {
+	ChatBot(const ChatBot &other);
+    ChatBot(ChatBot &&other);
+    ChatBot &operator=(const ChatBot &other) {
     	std::cout << "ChatBot Copy Assignment Operator" << std::endl;
+    	if (this == &other)
+            return *this;
         delete _image;
         _image = new wxBitmap();
-        *_image = *source._image;  
-
-        ChatBot::SetCurrentNode(source._currentNode);
-        ChatBot::SetRootNode(source._rootNode);
-        ChatBot::SetChatLogicHandle(source._chatLogic); 
-    }    
-    ChatBot(ChatBot &&source);
-    ChatBot &operator=(ChatBot &&source) {
-    std::cout << "ChatBot Move Assignment Operator" << std::endl;
-      delete _image;
-      _image = new wxBitmap();
-      *_image = *source.GetImageHandle(); 
-
-      ChatBot::SetCurrentNode(source._currentNode);
-      ChatBot::SetRootNode(source._rootNode);
-      ChatBot::SetChatLogicHandle(source._chatLogic);
-
-	  source._image = nullptr;
-      source.SetCurrentNode(nullptr);
-      source.SetRootNode(nullptr);
-      source.SetChatLogicHandle(nullptr);
-	}
+        *_image = *other._image;
+        _currentNode = other._currentNode;
+        _chatLogic = other._chatLogic;
+        _chatLogic->SetChatbotHandle(this);
+        return *this;
+    }
+    ChatBot &operator=(ChatBot &&other) {
+    	std::cout << "ChatBot Move Assignment Operator" << std::endl;
+    	if (this == &other)
+            return *this;
+        delete _image;
+        _image = other._image;
+        _currentNode = other._currentNode;
+        _chatLogic = other._chatLogic;
+        _chatLogic->SetChatbotHandle(this);
+        other._image = nullptr;
+        other._currentNode = nullptr;
+        other._chatLogic = nullptr;
+        return *this;
+    }
     ////
     //// EOF STUDENT CODE
 
@@ -64,7 +67,6 @@ public:
     void SetCurrentNode(GraphNode *node);
     void SetRootNode(GraphNode *rootNode) { _rootNode = rootNode; }
     void SetChatLogicHandle(ChatLogic *chatLogic) { _chatLogic = chatLogic; }
-    ChatLogic *GetChatLogicHandle() { return _chatLogic; }
     wxBitmap *GetImageHandle() { return _image; }
 
     // communication

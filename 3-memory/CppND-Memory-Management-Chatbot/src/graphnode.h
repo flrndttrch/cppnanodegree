@@ -5,7 +5,6 @@
 #include <string>
 #include <memory>
 #include "chatbot.h"
-#include "chatlogic.h"
 
 
 // forward declarations

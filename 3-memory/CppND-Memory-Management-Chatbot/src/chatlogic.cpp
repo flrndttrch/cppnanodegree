@@ -33,8 +33,19 @@ ChatLogic::~ChatLogic()
     ////
 
     // delete chatbot instance
-    std::cout << "Deleting ChatLogic\n";
     //delete _chatBot;
+
+    // delete all nodes
+    //for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
+    //{
+    //    delete *it;
+    //}
+
+    // delete all edges
+    //for (auto it = std::begin(_edges); it != std::end(_edges); ++it)
+    //{
+    //    delete *it;
+    //}
 
     ////
     //// EOF STUDENT CODE
@@ -125,7 +136,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                             newNode = _nodes.end() - 1; // get iterator to last element
 
                             // add all answers to current node
-                            AddAllTokensToElement("ANSWER", tokens, *(*newNode).get());
+                            AddAllTokensToElement("ANSWER", tokens, **newNode);
                         }
 
                         ////
@@ -206,9 +217,9 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
 
     // add chatbot to graph root node
   	ChatBot chatBot("../images/chatbot.png");
+  	chatBot.SetChatLogicHandle(this);
     chatBot.SetRootNode(rootNode);
-  	_chatBot = &chatBot;
-  	_chatBot->SetChatLogicHandle(this);
+  	_chatBot = std::move(chatBot);
     rootNode->MoveChatbotHere(std::move(chatBot));
     
     ////
@@ -227,8 +238,7 @@ void ChatLogic::SetChatbotHandle(ChatBot *chatbot)
 
 void ChatLogic::SendMessageToChatbot(std::string message)
 {
-    std::cout << "SendMessageToChatbot\n";
-  	_chatBot->ReceiveMessageFromUser(message);
+    _chatBot->ReceiveMessageFromUser(message);
 }
 
 void ChatLogic::SendMessageToUser(std::string message)
