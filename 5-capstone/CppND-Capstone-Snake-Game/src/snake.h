@@ -37,4 +37,14 @@ class Snake {
   int grid_height;
 };
 
+inline bool operator==(SDL_Point const &a, SDL_Point const &b)
+{
+  return a.x == b.x && a.y == b.y;
+}
+
+inline bool operator!=(SDL_Point const &a, SDL_Point const &b)
+{
+  return !(a == b);
+}
+
 #endif

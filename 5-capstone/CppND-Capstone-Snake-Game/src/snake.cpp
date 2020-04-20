@@ -1,6 +1,7 @@
 #include "snake.h"
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 void Snake::Update() {
   SDL_Point prev_cell{
@@ -70,10 +71,10 @@ bool Snake::SnakeCell(int x, int y) {
   if (x == static_cast<int>(head_x) && y == static_cast<int>(head_y)) {
     return true;
   }
-  for (auto const &item : body) {
-    if (x == item.x && y == item.y) {
-      return true;
-    }
+  SDL_Point cell = {x, y};
+  if (std::find(body.begin(), body.end(), cell) != body.end()) {
+    return true;
   }
+    
   return false;
 }

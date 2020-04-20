@@ -5,8 +5,8 @@
 Game::Game(std::size_t grid_width, std::size_t grid_height)
     : snake(grid_width, grid_height),
       engine(dev()),
-      random_w(0, static_cast<int>(grid_width)),
-      random_h(0, static_cast<int>(grid_height)) {
+      random_w(0, static_cast<int>(grid_width) - 1),
+      random_h(0, static_cast<int>(grid_height) - 1) {
   PlaceFood();
 }
 
@@ -25,7 +25,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(snake, food, bonus_food, bonus_valid.get());
 
     frame_end = SDL_GetTicks();
 
@@ -58,9 +58,29 @@ void Game::PlaceFood() {
     // Check that the location is not occupied by a snake item before placing
     // food.
     if (!snake.SnakeCell(x, y)) {
-      food.x = x;
-      food.y = y;
-      return;
+      if (food == nullptr) {
+      	food = std::make_unique<SDL_Point>(); 
+      }
+      food->x = x;
+      food->y = y;
+      break;
+    }
+  }
+  if (bonus_cntr % 10 != 0) return;
+  
+  while (true) {
+    x = random_w(engine);
+    y = random_h(engine);
+    // Check that the location is not occupied by a snake item before placing
+    // food.
+    if (!snake.SnakeCell(x, y) && food->x != x && food->y != y) {
+      bonus_food.SetPoint(x, y);
+      std::unique_lock<std::mutex> bonus_lock(bonus_mtx);
+      *bonus_eaten = false;
+      *bonus_valid = true;
+      bonus_lock.unlock();
+      bonus_ftr = std::async(&BonusFood::PlaceBonusFood, bonus_food, bonus_eaten.get());
+      return;  
     }
   }
 }
@@ -74,12 +94,41 @@ void Game::Update() {
   int new_y = static_cast<int>(snake.head_y);
 
   // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
+  std::unique_lock<std::mutex> score_lock(score_mtx);
+  score_lock.unlock();
+  if (food->x == new_x && food->y == new_y) {
+    score_lock.lock();
     score++;
+    score_lock.unlock();
+    bonus_cntr++;
     PlaceFood();
     // Grow snake and increase speed.
     snake.GrowBody();
     snake.speed += 0.02;
+  }
+  
+  if (bonus_ftr.valid()) {
+    std::future_status status = bonus_ftr.wait_for(std::chrono::milliseconds(10));
+    if (status == std::future_status::ready) {
+      int bonus_points = bonus_ftr.get(); 
+      std::cout << "You received " << bonus_points << " bonus points!\n";
+      score_lock.lock();
+      score += bonus_points;
+      score_lock.unlock();
+      
+      std::unique_lock<std::mutex> bonus_lock(bonus_mtx);
+      *bonus_valid = false;
+      bonus_lock.unlock();
+      
+    }
+  }
+  
+  if (bonus_food.GetPoint().x == new_x && bonus_food.GetPoint().y == new_y) {   
+    std::unique_lock<std::mutex> bonus_lock(bonus_mtx);
+    *bonus_eaten = true;
+    *bonus_valid = false;
+    bonus_lock.unlock();
+    snake.GrowBody();
   }
 }
 
